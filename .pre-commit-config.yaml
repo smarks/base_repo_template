@@ -1,0 +1,30 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.1
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: pyright
+        name: pyright type check
+        entry: uv run pyright
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: pytest-cov
+        name: pytest with coverage
+        entry: uv run python scripts/update_coverage_threshold.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: playwright-e2e
+        name: playwright e2e with coverage
+        entry: uv run python scripts/update_js_coverage_threshold.py
+        language: system
+        pass_filenames: false
+        always_run: true
