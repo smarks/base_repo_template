@@ -1,4 +1,4 @@
-# Pillars Folio
+# Tarmar Folio
 
 Django authentication project with user registration, login, and profile management.
 
