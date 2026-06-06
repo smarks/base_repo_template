@@ -9,7 +9,7 @@ inputs:
     description: Result of the workflow's main job (success / failure / cancelled / skipped).
     required: true
   mail-password:
-    description: Fastmail app password. Pass ${{ secrets.MAIL_PASSWORD }}; empty = skip sending.
+    description: Fastmail app password (pass secrets.MAIL_PASSWORD from the caller). Empty string = skip sending.
     required: true
   mail-to:
     description: Recipient address.
