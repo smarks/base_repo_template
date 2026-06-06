@@ -1,0 +1,69 @@
+name: Notify on failure or recovery
+description: >
+  Email (via Fastmail SMTP) when this workflow FAILS, or when it SUCCEEDS after the
+  previous run on the same branch failed (green-after-red). No-op when mail-password
+  is empty, so it is safe to add before the secret exists.
+
+inputs:
+  job-status:
+    description: Result of the workflow's main job (success / failure / cancelled / skipped).
+    required: true
+  mail-password:
+    description: Fastmail app password. Pass ${{ secrets.MAIL_PASSWORD }}; empty = skip sending.
+    required: true
+  mail-to:
+    description: Recipient address.
+    required: false
+    default: smarks@origamisoftware.com
+  mail-from:
+    description: Sender address (also the SMTP username).
+    required: false
+    default: smarks@origamisoftware.com
+
+runs:
+  using: composite
+  steps:
+    - name: Decide whether to notify
+      id: decide
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        CURRENT: ${{ inputs.job-status }}
+        WF: ${{ github.workflow }}
+        REPO: ${{ github.repository }}
+        BRANCH: ${{ github.ref_name }}
+      run: |
+        # The current run is still in progress, so the latest COMPLETED run on this
+        # branch is the previous one.
+        prev=$(gh run list --repo "$REPO" --workflow "$WF" --branch "$BRANCH" \
+                 --status completed --limit 1 --json conclusion --jq '.[0].conclusion // "none"' 2>/dev/null || echo none)
+        echo "previous completed run: $prev | current: $CURRENT"
+        send=no; kind=""
+        if [ "$CURRENT" = "failure" ]; then
+          send=yes; kind="FAILED"
+        elif [ "$CURRENT" = "success" ] && [ "$prev" = "failure" ]; then
+          send=yes; kind="RECOVERED — green after red"
+        fi
+        echo "send=$send" >> "$GITHUB_OUTPUT"
+        echo "kind=$kind" >> "$GITHUB_OUTPUT"
+
+    - name: Send the email
+      if: steps.decide.outputs.send == 'yes' && inputs.mail-password != ''
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.fastmail.com
+        server_port: "465"
+        secure: true
+        username: ${{ inputs.mail-from }}
+        password: ${{ inputs.mail-password }}
+        from: GitHub Actions <${{ inputs.mail-from }}>
+        to: ${{ inputs.mail-to }}
+        subject: "[${{ steps.decide.outputs.kind }}] ${{ github.workflow }} — ${{ github.repository }}"
+        body: |
+          ${{ steps.decide.outputs.kind }}
+
+          Workflow:   ${{ github.workflow }}
+          Repository: ${{ github.repository }}
+          Branch:     ${{ github.ref_name }}
+          Commit:     ${{ github.sha }}
+          Run:        ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
