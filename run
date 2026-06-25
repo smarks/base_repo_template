@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Task runner for this project. CI runs `./run check` (the pre-commit hooks),
+# so local and CI checks stay a single source of truth.
+set -euo pipefail
+
+case "${1:-}" in
+  dev)     uv run python manage.py runserver ;;
+  test)    uv run pytest ;;
+  lint)    uv run ruff check --fix ;;
+  format)  uv run ruff format ;;
+  check)   uv run pre-commit run --all-files ;;
+  migrate) uv run python manage.py migrate ;;
+  *)
+    echo "usage: ./run {dev|test|lint|format|check|migrate}" >&2
+    exit 1
+    ;;
+esac

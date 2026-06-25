@@ -1,0 +1,31 @@
+[project]
+name = "virtual-card-table"
+version = "0.1.0"
+description = "Base Django project template: uv, ruff, pyright, pytest, pre-commit, and CI that runs the same hooks."
+requires-python = ">=3.12"
+dependencies = [
+    "django>=5.2,<6.1",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9",
+    "pyright>=1.1.390",
+    "pytest>=8.0",
+    "pytest-django>=4.8",
+    "pre-commit>=3.7",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.pyright]
+include = ["virtual_card_table", "tests"]
+typeCheckingMode = "basic"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "virtual_card_table.settings"
+python_files = ["test_*.py", "tests.py"]
+testpaths = ["tests"]
+addopts = "-p no:cacheprovider"

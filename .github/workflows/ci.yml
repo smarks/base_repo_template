@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  check:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,20 +15,8 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
 
-      - name: Set up Python
-        run: uv python install
+      - name: Install dependencies
+        run: uv sync
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install npm dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Run checks
-        run: ./run check
+      - name: Run checks (same as the pre-commit hooks)
+        run: uv run pre-commit run --all-files
